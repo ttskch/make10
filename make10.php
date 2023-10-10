@@ -14,7 +14,7 @@ final readonly class Operand
 final readonly class Operation
 {
     public function __construct(
-        public string $operator,
+        private string $operator,
     ) {
         if (!in_array($operator, ['+', '-', '*', '/'], true)) {
             throw new InvalidArgumentException();
@@ -23,37 +23,21 @@ final readonly class Operation
 
     public function __invoke(float $a, float $b): float
     {
+        if ($this->operator === '/' && $b == 0) {
+            throw new InvalidArgumentException();
+        }
+
         return match ($this->operator) {
-            '+' => $this->add($a, $b),
-            '-' => $this->sub($a, $b),
-            '*' => $this->mul($a, $b),
-            '/' => $this->div($a, $b),
+            '+' => $a + $b,
+            '-' => $a - $b,
+            '*' => $a * $b,
+            '/' => $a / $b,
         };
     }
 
     public function __toString(): string
     {
         return $this->operator;
-    }
-
-    private function add(float $a, float $b): float
-    {
-        return $a + $b;
-    }
-
-    private function sub(float $a, float $b): float
-    {
-        return $a - $b;
-    }
-
-    private function mul(float $a, float $b): float
-    {
-        return $a * $b;
-    }
-
-    private function div(float $a, float $b): float
-    {
-        return $a / $b;
     }
 }
 
@@ -71,7 +55,7 @@ function solve(array $operands, int|float $answer): ?string
         }
     }
 
-    foreach ($nextTwoOperandsCombinations as $nextTwoOperands) {
+    foreach ($nextTwoOperandsCombinations as [$operand1, $operand2]) {
 
         $operations = [
             new Operation('+'),
@@ -81,15 +65,15 @@ function solve(array $operands, int|float $answer): ?string
         ];
 
         foreach ($operations as $operation) {
-            if (strval($operation) === '/' && $nextTwoOperands[1]->value == 0) {
+            if (strval($operation) === '/' && $operand2->value == 0) {
                 continue;
             }
-            $value = $operation($nextTwoOperands[0]->value, $nextTwoOperands[1]->value);
-            $expression = sprintf('(%s %s %s)', $nextTwoOperands[0]->expression, $operation, $nextTwoOperands[1]->expression);
+            $value = $operation($operand1->value, $operand2->value);
+            $expression = sprintf('(%s %s %s)', $operand1->expression, $operation, $operand2->expression);
 
             $restOperands = [];
             foreach ($operands as $operand) {
-                if (!in_array($operand, $nextTwoOperands, true)) {
+                if ($operand !== $operand1 && $operand !== $operand2) {
                     $restOperands[] = $operand;
                 }
             }
