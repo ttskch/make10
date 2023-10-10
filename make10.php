@@ -81,7 +81,7 @@ function solve(array $operands, int|float $answer): ?string
         ];
 
         foreach ($operations as $operation) {
-            if ($nextTwoOperands[1]->value == 0) {
+            if (strval($operation) === '/' && $nextTwoOperands[1]->value == 0) {
                 continue;
             }
             $value = $operation($nextTwoOperands[0]->value, $nextTwoOperands[1]->value);
